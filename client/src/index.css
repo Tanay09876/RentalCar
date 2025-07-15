@@ -1,8 +1,9 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
 @import "tailwindcss";
 
-*{
+* {
   font-family: "Outfit", sans-serif;
 }
 
@@ -12,6 +13,7 @@
   --color-light: #F1F5F9;
   --color-borderColor: #c4c7d2;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -20,7 +22,16 @@
   scrollbar-width: none;
 }
 
+/* ✅ Light Mode Variables */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #0f172a;
+  --color-primary: #2563EB;
+  --color-primary-dull: #1F58D8;
+  --color-borderColor: #c4c7d2;
+}
 
+/* ✅ Dark Mode Variables */
 [data-theme='dark'] {
   --color-bg: #0f172a;
   --color-text: #f1f5f9;
@@ -29,7 +40,7 @@
   --color-borderColor: #475569;
 }
 
-/* ✅ Apply Colors Globally */
+/* Apply Colors Globally */
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -41,13 +52,11 @@ body {
 .container,
 .main-wrapper,
 section,
-footer ,
-h1{
-
+footer,
+.car-title,
+.car-description,
+.car-feature {
   background-color: var(--color-bg);
   color: var(--color-text);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-
-
-

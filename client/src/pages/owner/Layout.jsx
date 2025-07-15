@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import NavbarOwner from '../../components/owner/NavbarOwner'
-import Sidebar from '../../components/owner/Sidebar'
+// import Sidebar from '../../components/owner/Sidebar'
 import { Outlet } from 'react-router-dom'
 import { useAppContext } from '../../context/AppContext'
 
@@ -16,7 +16,7 @@ const Layout = () => {
     <div className='flex flex-col'>
       <NavbarOwner />
       <div className='flex'>
-        <Sidebar />
+        {/* <Sidebar /> */}
         <Outlet />
       </div>
     </div>
