@@ -72,7 +72,7 @@ const CarDetails = () => {
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <div>
-              <h1 className="text-3xl font-bold text-black dark:text-white">
+              <h1 className="text-3xl font-bold car-title">
   {car.brand} {car.model}
 </h1>
 
@@ -102,13 +102,13 @@ const CarDetails = () => {
 
             {/* Description */}
             <div>
-              <h1 className="text-xl font-medium mb-3">Description</h1>
+              <h1 className="text-xl font-medium mb-3 car-description">Description</h1>
               <p className="text-gray-500 dark:text-gray-400">{car.description}</p>
             </div>
 
             {/* Features */}
             <div>
-              <h1 className="text-xl font-medium mb-3">Features</h1>
+              <h1 className="text-xl font-medium mb-3 car-feature">Features</h1>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   "360 Camera",

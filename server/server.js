@@ -1,7 +1,8 @@
-
+// server.js
 import express from "express";
-import "dotenv/config";
 import cors from "cors";
+import "dotenv/config";
+
 import connectDB from "./configs/db.js";
 import userRouter from "./routes/userRoutes.js";
 import ownerRouter from "./routes/ownerRoutes.js";
@@ -11,29 +12,33 @@ const app = express();
 
 const startServer = async () => {
   try {
-    await connectDB(); // ✅ Await DB connection
+    // Connect to MongoDB
+    await connectDB();
 
-    // Middleware
+    // Middlewares
     app.use(cors());
     app.use(express.json());
 
-    // Routes
-    app.get('/', (req, res) => res.send("Server is running"));
-    app.use('/api/user', userRouter);
-    app.use('/api/owner', ownerRouter);
-    app.use('/api/bookings', bookingRouter);
+    // API Routes
+    app.get("/", (req, res) => res.send("🚗 Car Rental API is running"));
+    app.use("/api/user", userRouter);
+    app.use("/api/owner", ownerRouter);
+    app.use("/api/bookings", bookingRouter);
 
-    // Start server
+    // Start Express server
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on http://localhost:${PORT}`);
+    });
 
   } catch (error) {
     console.error("❌ Failed to start server:", error.message);
-    process.exit(1); // Exit if DB connection fails
+    process.exit(1); // Terminate the process on failure
   }
 };
 
 startServer();
+
 
 // import express from "express";
 // import "dotenv/config";
