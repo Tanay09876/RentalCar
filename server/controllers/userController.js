@@ -1,7 +1,20 @@
+
+
+
+
+
+
+
+
+
+
+
 import User from "../models/User.js";
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import fs from "fs";
 import Car from "../models/Car.js";
+import imagekit from "../configs/imageKit.js";
 import { sendOTPEmail, sendWelcomeEmail } from "../utils/mailer.js";
 
 // In-memory store for OTPs
@@ -31,7 +44,6 @@ export const registerUser = async (req, res) => {
     const user = await User.create({ name, email, password: hashedPassword });
     const token = generateToken(user._id.toString());
 
-    // Send welcome email
     await sendWelcomeEmail(email, name);
 
     res.json({ success: true, token, role: user.role });
@@ -64,7 +76,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Get User data using Token (JWT)
+// Get User Data
 export const getUserData = async (req, res) => {
   try {
     const { user } = req;
@@ -75,7 +87,7 @@ export const getUserData = async (req, res) => {
   }
 };
 
-// Get All Cars for the Frontend
+// Get All Cars
 export const getCars = async (req, res) => {
   try {
     const cars = await Car.find({ isAvaliable: true });
@@ -86,7 +98,7 @@ export const getCars = async (req, res) => {
   }
 };
 
-// Send OTP to Email
+// Send OTP
 export const sendOTP = async (req, res) => {
   try {
     const { email } = req.body;
@@ -97,7 +109,7 @@ export const sendOTP = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore.set(email, otp);
 
-    setTimeout(() => otpStore.delete(email), 10 * 60 * 1000); // 10 min expiry
+    setTimeout(() => otpStore.delete(email), 10 * 60 * 1000);
 
     await sendOTPEmail(email, otp);
     res.json({ success: true, message: "OTP sent to email" });
@@ -107,7 +119,7 @@ export const sendOTP = async (req, res) => {
   }
 };
 
-// Verify OTP and Reset Password
+// Verify OTP & Reset Password
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -125,5 +137,59 @@ export const verifyOTP = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });
+  }
+};
+
+// ✅ Update Profile Info
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const { name, email, password } = req.body;
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+
+    if (password) {
+      if (password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: "Password must be at least 8 characters long",
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+    res.json({ success: true, message: "Profile updated successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ✅ Update Profile Image
+export const updateUserImage = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (!req.file) return res.status(400).json({ success: false, message: "No image uploaded" });
+
+    const file = req.file;
+    const uploadedImage = await imagekit.upload({
+      file: fs.readFileSync(file.path),
+      fileName: file.originalname,
+    });
+
+    user.image = uploadedImage.url;
+    await user.save();
+
+    fs.unlinkSync(file.path);
+
+    res.json({ success: true, message: "Image updated", image: uploadedImage.url });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Image update failed" });
   }
 };
