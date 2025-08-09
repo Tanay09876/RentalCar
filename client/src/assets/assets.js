@@ -41,6 +41,8 @@ import car_image2 from "./car_image2.png"
 import car_image3 from "./car_image3.png"
 import car_image4 from "./car_image4.png"
 
+
+
 export  const cityList = [
   'Mumbai',
   'Delhi',
@@ -95,7 +97,8 @@ export const assets = {
     user_profile,
     car_image2,
     car_image3,
-    car_image4
+    car_image4,
+
 }
 
 export const menuLinks = [
@@ -105,11 +108,25 @@ export const menuLinks = [
 ]
 
 export const ownerMenuLinks = [
-    { name: "Dashboard", path: "/owner", icon: dashboardIcon, coloredIcon: dashboardIconColored },
-    { name: "Add car", path: "/owner/add-car", icon: addIcon, coloredIcon: addIconColored },
-    { name: "Manage Cars", path: "/owner/manage-cars", icon: carIcon, coloredIcon: carIconColored },
-    { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },
+  { name: "Dashboard", path: "/owner", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+  { name: "Add car", path: "/owner/add-car", icon: addIcon, coloredIcon: addIconColored },
+  { name: "Manage Cars", path: "/owner/manage-cars", icon: carIcon, coloredIcon: carIconColored },
+  { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },
+
+];
+
+
+
+
+export const adminMenuLinks = [
+    { name: "Dashboard", path: "/admin", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+    { name: "Add car", path: "/admin/add-car", icon: addIcon, coloredIcon: addIconColored },
+    { name: "Manage Cars", path: "/admin/manage-cars", icon: carIcon, coloredIcon: carIconColored },
+    { name: "Manage Bookings", path: "/admin/manage-bookings", icon: listIcon, coloredIcon: listIconColored },
 ]
+
+
+
 
 export const dummyUserData = {
   "_id": "6847f7cab3d8daecdb517095",

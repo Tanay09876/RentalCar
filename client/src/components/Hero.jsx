@@ -38,14 +38,15 @@ const Hero = () => {
         transition={{ duration: 0.8 }}
         className="relative z-20 h-full flex flex-col items-center justify-center gap-14 text-white text-center px-4"
       >
-        <motion.h1
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-4xl md:text-5xl font-semibold drop-shadow-lg"
-        >
-          Luxury cars on Rent
-        </motion.h1>
+    <motion.h1
+  initial={{ y: 50, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ duration: 0.8, delay: 0.2 }}
+  className="text-4xl md:text-5xl font-semibold drop-shadow-lg text-white"
+>
+  Luxury cars on Rent
+</motion.h1>
+
 <motion.form
   initial={{ scale: 0.95, opacity: 0, y: 50 }}
   animate={{ scale: 1, opacity: 1, y: 0 }}
