@@ -183,3 +183,67 @@ export const updateUserImage = async (req, res)=>{
         res.json({success: false, message: error.message})
     }
 }   
+// GET /api/owner/dashboard-graph-data?type=revenue|status|category
+export const getGraphData = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { type } = req.query;
+
+    const bookings = await Booking.find({ owner: _id, status: "confirmed" }).populate('car');
+
+    if (type === 'revenue') {
+      // Group revenue by month
+      const monthlyData = {};
+
+      bookings.forEach((booking) => {
+        const date = new Date(booking.createdAt);
+        const month = date.toLocaleString('default', { month: 'short' });
+        monthlyData[month] = (monthlyData[month] || 0) + booking.price;
+      });
+
+      const revenueData = Object.keys(monthlyData).map(month => ({
+        name: month,
+        value: monthlyData[month],
+      }));
+
+      return res.json({ success: true, data: revenueData });
+    }
+
+    if (type === 'status') {
+      const allBookings = await Booking.find({ owner: _id });
+      const statusCount = { pending: 0, confirmed: 0, cancelled: 0 };
+
+      allBookings.forEach(b => {
+        statusCount[b.status] = (statusCount[b.status] || 0) + 1;
+      });
+
+      const statusData = Object.keys(statusCount).map(key => ({
+        name: key,
+        value: statusCount[key],
+      }));
+
+      return res.json({ success: true, data: statusData });
+    }
+
+    if (type === 'category') {
+      const categoryData = {};
+
+      bookings.forEach((booking) => {
+        const category = booking.car.category || "Other";
+        categoryData[category] = (categoryData[category] || 0) + booking.price;
+      });
+
+      const result = Object.keys(categoryData).map(cat => ({
+        name: cat,
+        value: categoryData[cat],
+      }));
+
+      return res.json({ success: true, data: result });
+    }
+
+    res.json({ success: false, message: "Invalid type" });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
