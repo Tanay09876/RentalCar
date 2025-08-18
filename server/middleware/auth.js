@@ -9,7 +9,7 @@ export const protect = async (req, res, next)=>{
     try {
         const userId = jwt.decode(token, process.env.JWT_SECRET)
 
-        if(!userId){
+        if(!userId  ){
             return res.json({success: false, message: "not authorized"})
         }
         req.user = await User.findById(userId).select("-password")
@@ -18,8 +18,6 @@ export const protect = async (req, res, next)=>{
         return res.json({success: false, message: "not authorized"})
     }
 }
-
-
 
 
 
