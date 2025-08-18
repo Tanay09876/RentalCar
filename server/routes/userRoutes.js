@@ -1,13 +1,4 @@
 
-
-
-
-
-
-
-
-
-
 // import express from "express";
 // import {
 //   registerUser,
@@ -36,10 +27,11 @@
 
 
 
-// routes/userRoutes.js
 
+// routes/userRoutes.js
 import express from "express";
 import bcrypt from "bcryptjs";
+import fs from "fs";
 import User from "../models/User.js";
 import {
   loginUser,
@@ -47,6 +39,8 @@ import {
   getCars,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/auth.js";
+import upload from "../middleware/multer.js";
+import imagekit from "../utils/imagekit.js";
 import { sendOTPEmail, sendWelcomeEmail } from "../utils/mailer.js";
 
 const router = express.Router();
@@ -82,6 +76,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
+
 // ✅ Login
 router.post("/login", loginUser);
 
@@ -113,7 +108,7 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
-//  Verify OTP and Reset Password
+// ✅ Verify OTP and Reset Password
 router.post("/verify-otp", async (req, res) => {
   const { email, otp, newPassword } = req.body;
   try {
@@ -155,16 +150,27 @@ router.get("/profile", protect, async (req, res) => {
   }
 });
 
-// ✅ Update Profile
-router.put("/update-profile", protect, async (req, res) => {
-  const { name, password, confirmPassword } = req.body;
-
+// ✅ Update Profile Route
+router.put("/update-profile", protect, upload.single("image"), async (req, res) => {
   try {
+    const { name, email, password, confirmPassword } = req.body;
+
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Update name
     if (name) user.name = name;
 
+    // Update email (check if not already used)
+    if (email && email !== user.email) {
+      const existing = await User.findOne({ email });
+      if (existing) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      user.email = email;
+    }
+
+    // Update password
     if (password || confirmPassword) {
       if (password !== confirmPassword) {
         return res.status(400).json({ message: "Passwords do not match" });
@@ -175,8 +181,27 @@ router.put("/update-profile", protect, async (req, res) => {
       user.password = await bcrypt.hash(password, 10);
     }
 
+    // Update image if uploaded
+    if (req.file) {
+      const uploadedImage = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: req.file.originalname,
+      });
+
+      user.image = uploadedImage.url;
+    }
+
     await user.save();
-    res.json({ success: true, message: "Profile updated successfully" });
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+        image: user.image
+      }
+    });
   } catch (error) {
     console.error("Update Profile Error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -184,6 +209,3 @@ router.put("/update-profile", protect, async (req, res) => {
 });
 
 export default router;
-
-
-

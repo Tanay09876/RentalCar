@@ -115,3 +115,13 @@ export const changeBookingStatus = async (req, res)=>{
         res.json({success: false, message: error.message})
     }
 }
+
+// bookingController.js
+export const getAllBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find().populate("car").populate("user");
+    res.json({ success: true, bookings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -1,4 +1,3 @@
-
 // server.js
 import express from "express";
 import cors from "cors";
@@ -8,6 +7,7 @@ import connectDB from "./configs/db.js";
 import userRouter from "./routes/userRoutes.js";
 import ownerRouter from "./routes/ownerRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import adminRouter from "./routes/adminRoutes.js"; // ✅ Import admin routes
 
 const app = express();
 
@@ -16,31 +16,31 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
-    // Global Middlewares
+    // Middlewares
     app.use(cors());
     app.use(express.json());
 
-    // Test Route
-    app.get("/", (req, res) => res.send("🚗 Car Rental API is running"));
-
     // API Routes
+    app.get("/", (req, res) => res.send("🚗 Car Rental API is running"));
     app.use("/api/user", userRouter);
     app.use("/api/owner", ownerRouter);
     app.use("/api/bookings", bookingRouter);
+    app.use("/api/admin", adminRouter); // ✅ Mount admin routes
 
-    // Start Server
+    // Start Express server
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
-      console.log(` Server running on http://localhost:${PORT}`);
+      console.log(`✅ Server running on http://localhost:${PORT}`);
     });
-
   } catch (error) {
-    console.error("Failed to start server:", error.message);
+    console.error("❌ Failed to start server:", error.message);
     process.exit(1);
   }
 };
 
 startServer();
+
+
 
 
 // // server.js
