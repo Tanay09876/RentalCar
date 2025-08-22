@@ -77,12 +77,7 @@ const Login = () => {
             headers: { Authorization: `Bearer ${data.token}` }
           });
 
-          const userRole = userRes?.data?.user?.role;
-          if (userRole === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/owner');
-          }
+         
         } else {
           toast.error(data.message);
         }
