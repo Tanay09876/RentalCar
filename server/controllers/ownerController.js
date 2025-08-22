@@ -6,16 +6,42 @@ import fs from "fs";
 
 
 // API to Change Role of User
-export const changeRoleToOwner = async (req, res)=>{
-    try {
-        const {_id} = req.user;
-        await User.findByIdAndUpdate(_id, {role: "owner"})
-        res.json({success: true, message: "Now you can list cars"})
-    } catch (error) {
-        console.log(error.message);
-        res.json({success: false, message: error.message})
+// export const changeRoleToOwner = async (req, res)=>{
+//     try {
+//         const {_id} = req.user;
+//         await User.findByIdAndUpdate(_id, {role: "owner"})
+//         res.json({success: true, message: "Now you can list cars"})
+//     } catch (error) {
+//         console.log(error.message);
+//         res.json({success: false, message: error.message})
+//     }
+// }
+export const changeRoleToOwner = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const user = await User.findById(_id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-}
+
+    if (user.role === "admin") {
+      return res.status(400).json({
+        success: false,
+        message: "Admin role cannot be changed to owner",
+      });
+    }
+
+    user.role = "owner";
+    await user.save();
+
+    res.json({ success: true, message: "Now you can list cars" });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 // API to List Car
 

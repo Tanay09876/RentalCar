@@ -156,7 +156,8 @@
 //   )
 // }
 
-// export default Navbar
+// // export default Navbar
+
 import React, { useState, useEffect } from 'react';
 import { assets, menuLinks } from '../assets/assets';
 import { Link, useNavigate } from 'react-router-dom';
@@ -166,7 +167,7 @@ import { motion } from 'motion/react';
 import { FaSun, FaMoon } from 'react-icons/fa';
 
 const Navbar = () => {
-  const { setShowLogin, user, isOwner, axios, setIsOwner } = useAppContext();
+  const { setShowLogin, user, isOwner, isAdmin, axios, setIsOwner, setIsAdmin } = useAppContext();
   const [open, setOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   const navigate = useNavigate();
@@ -177,6 +178,7 @@ const Navbar = () => {
     localStorage.setItem('theme', theme);
   }, [darkMode]);
 
+  // Change Role to Owner
   const changeRole = async () => {
     try {
       const { data } = await axios.post('/api/owner/change-role');
@@ -188,6 +190,53 @@ const Navbar = () => {
       }
     } catch (error) {
       toast.error(error.message);
+    }
+  };
+
+  // Change Role to Admin (if you support promoting via API)
+  const changeRoleToAdmin = async () => {
+    try {
+      const { data } = await axios.post('/api/admin/change-role');
+      if (data.success) {
+        setIsAdmin(true);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // Decide button label & action
+  const getRoleButton = () => {
+    if (isAdmin) {
+      return (
+        <button
+          onClick={() => navigate('/admin')}
+          className="font-medium hover:text-[var(--color-primary)] transition"
+        >
+          Dashboard
+        </button>
+      );
+    } else if (isOwner) {
+      return (
+        <button
+          onClick={() => navigate('/owner')}
+          className="font-medium hover:text-[var(--color-primary)] transition"
+        >
+         Dashboard
+        </button>
+      );
+    } else {
+      return (
+        <button
+          onClick={() => changeRole()}
+          className="font-medium hover:text-[var(--color-primary)] transition"
+        >
+          List cars
+        </button>
+      );
     }
   };
 
@@ -220,13 +269,9 @@ const Navbar = () => {
           </Link>
         ))}
 
-        <button
-          onClick={() => (isOwner ? navigate('/owner') : changeRole())}
-          className="font-medium hover:text-[var(--color-primary)] transition"
-        >
-          {isOwner ? 'Dashboard' : 'List cars'}
-        </button>
+        {getRoleButton()}
 
+        {/* Theme Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
           aria-label="Toggle Theme"
@@ -299,15 +344,22 @@ const Navbar = () => {
             </Link>
           ))}
 
-          <button
+          {/* Role Button (Admin / Owner / List Cars) */}
+          <div
             onClick={() => {
               setOpen(false);
-              isOwner ? navigate('/owner') : changeRole();
+              if (isAdmin) {
+                navigate('/admin');
+              } else if (isOwner) {
+                navigate('/owner');
+              } else {
+                changeRole();
+              }
             }}
-            className="font-medium hover:text-[var(--color-primary)] text-start transition"
+            className="font-medium hover:text-[var(--color-primary)] text-start transition cursor-pointer"
           >
-            {isOwner ? 'Dashboard' : 'List cars'}
-          </button>
+            {isAdmin ? 'Admin Dashboard' : isOwner ? 'Owner Dashboard' : 'List cars'}
+          </div>
 
           {!user && (
             <button
@@ -331,3 +383,5 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+

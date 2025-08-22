@@ -160,6 +160,7 @@ const NavbarOwner = () => {
         <Link to="/">
           <img src={assets.logo} alt="logo" className="h-7" />
         </Link>
+    
 
         <div className="flex items-center gap-4">
           <button
