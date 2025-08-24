@@ -144,36 +144,53 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Update profile (name, email, password, image)
+
+// ✅ Update Profile (name, email, password)
 export const updateProfile = async (req, res) => {
   try {
+    const userId = req.user._id;
     const { name, email, password, confirmPassword } = req.body;
 
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: "Name and email are required" });
     }
 
-    // Update fields if provided
-    if (name) user.name = name;
-    if (email) user.email = email;
+    if (password && password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "Passwords do not match" });
+    }
+
+    const updateData = { name, email };
 
     if (password) {
-      if (password !== confirmPassword) {
-        return res.status(400).json({ message: "Passwords do not match" });
-      }
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+      updateData.password = await bcrypt.hash(password, salt);
     }
 
-    // If image was uploaded via multer
-    if (req.file) {
-      user.image = `/uploads/${req.file.filename}`;
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error("Update profile error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ✅ Update Profile Image
+export const updateProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No image uploaded" });
     }
 
-    await user.save();
-    res.json({ message: "Profile updated successfully", user });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { image: `/uploads/${req.file.filename}` },
+      { new: true }
+    );
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error("Update profile image error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

@@ -358,7 +358,7 @@ const Navbar = () => {
             }}
             className="font-medium hover:text-[var(--color-primary)] text-start transition cursor-pointer"
           >
-            {isAdmin ? 'Admin Dashboard' : isOwner ? 'Owner Dashboard' : 'List cars'}
+            {isAdmin ? 'Dashboard' : isOwner ? 'Dashboard' : 'List cars'}
           </div>
 
           {!user && (
