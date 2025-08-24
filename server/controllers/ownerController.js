@@ -152,6 +152,7 @@ export const getDashboardData = async (req, res) =>{
 
         const pendingBookings = await Booking.find({owner: _id, status: "pending" })
         const completedBookings = await Booking.find({owner: _id, status: "confirmed" })
+         const cancelledBookings = await Booking.find({ owner: _id, status: "cancelled" });
 
         // Calculate monthlyRevenue from bookings where status is confirmed
         const monthlyRevenue = bookings.slice().filter(booking => booking.status === 'confirmed').reduce((acc, booking)=> acc + booking.price, 0)
@@ -161,8 +162,10 @@ export const getDashboardData = async (req, res) =>{
             totalBookings: bookings.length,
             pendingBookings: pendingBookings.length,
             completedBookings: completedBookings.length,
+            cancelledBookings: cancelledBookings.length,
             recentBookings: bookings.slice(0,3),
             monthlyRevenue
+             
         }
 
         res.json({ success: true, dashboardData });
@@ -273,3 +276,5 @@ export const getGraphData = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+

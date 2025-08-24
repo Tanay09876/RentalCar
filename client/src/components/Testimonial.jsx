@@ -22,7 +22,7 @@ const dummyTestimonials = [
     name: 'Rahul Verma',
     location: 'Bangalore, India',
     rating: 5,
-    image: assets.testimonial_image_3,
+    image: assets.testimonial_image_1,
     testimonial: 'Amazing service and wide car selection. Will use it again for sure!',
   },
   {
