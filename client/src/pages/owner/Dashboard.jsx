@@ -57,7 +57,7 @@ const Dashboard = () => {
           {dashboardCards.map((card, index) => (
             <div
               key={index}
-              className="flex gap-2 items-center justify-between p-4 rounded-md border border-borderColor bg-white dark:bg-darkSecondary shadow-sm"
+              className="flex gap-2 items-center justify-between p-4 rounded-md border border-borderColor shadow-sm"
             >
               <div>
                 <h1 className="text-xs text-gray-500">{card.title}</h1>

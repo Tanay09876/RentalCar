@@ -93,4 +93,5 @@ router.get("/owner", protect, getOwnerBookings);
 // ✅ Admin: Send mail to user
 router.post("/send-mail", protect, adminOnly, sendMailToUser);
 
+
 export default router;
