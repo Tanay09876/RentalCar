@@ -1,3 +1,5 @@
+/* The above code is a React component called `ManageCarsAdmin` that is used for managing cars in an
+admin dashboard. Here is a summary of what the code is doing: */
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { assets } from '../../assets/assets';
 import Title from '../../components/owner/Title';
@@ -14,47 +16,57 @@ const ManageCarsAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // Fetch all cars (admin)
-  const fetchAllCars = useCallback(async () => {
+  // Fetch all cars for Admin
+  const fetchAdminCars = useCallback(async () => {
     try {
-      const { data } = await axios.get('/api/admin/cars'); // admin endpoint
-      if (data.success) setCars(data.cars);
-      else toast.error(data.message);
+      const { data } = await axios.get('/api/admin/cars'); // ✅ correct admin endpoint
+      if (data.success) {
+        setCars(data.cars);
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
       toast.error(error.message || 'Failed to fetch cars.');
     }
   }, [axios]);
 
+  // Toggle availability of a car
   const toggleAvailability = async (carId) => {
     try {
-      const { data } = await axios.post('/api/admin/toggle-car', { carId }); // admin endpoint
+      const { data } = await axios.post('/api/admin/toggle-car', { carId });
       if (data.success) {
         toast.success(data.message);
-        fetchAllCars();
-      } else toast.error(data.message);
+        fetchAdminCars(); // ✅ refetch updated list
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
       toast.error(error.message || 'Failed to update availability.');
     }
   };
 
+  // Delete a car
   const deleteCar = async (carId) => {
     try {
       const confirmed = window.confirm('Are you sure you want to delete this car?');
       if (!confirmed) return;
 
-      const { data } = await axios.post('/api/admin/delete-car', { carId }); // admin endpoint
+      const { data } = await axios.post('/api/admin/delete-car', { carId });
       if (data.success) {
         toast.success(data.message);
-        fetchAllCars();
-      } else toast.error(data.message);
+        fetchAdminCars(); // ✅ refetch updated list
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
       toast.error(error.message || 'Failed to delete car.');
     }
   };
 
+  // Run when component mounts
   useEffect(() => {
-    if (isAdmin) fetchAllCars();
-  }, [isAdmin, fetchAllCars]);
+    if (isAdmin) fetchAdminCars(); // ✅ fixed (was isOwner before)
+  }, [isAdmin, fetchAdminCars]);
 
   // Filtering & Sorting
   const filteredCars = useMemo(() => {
@@ -85,7 +97,7 @@ const ManageCarsAdmin = () => {
     <div className="px-4 pt-10 md:px-10 w-full">
       <Title
         title="Manage Cars"
-        subTitle="View all cars listed by users, update details, or remove them from the platform."
+        subTitle="View all listed cars, update their details, or remove them from the booking platform."
       />
 
       {/* Filters */}
@@ -102,7 +114,8 @@ const ManageCarsAdmin = () => {
         />
 
         <select
-          className="w-full md:w-1/4 py-2 px-3 border border-borderColor rounded-md"
+          className="border border-borderColor rounded-md px-3 py-2 text-sm w-full md:w-48
+             text-gray-700 dark:bg-gray-900 dark:text-white dark:border-gray-600"
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -115,7 +128,8 @@ const ManageCarsAdmin = () => {
         </select>
 
         <select
-          className="w-full md:w-1/4 py-2 px-3 border border-borderColor rounded-md"
+          className="border border-borderColor rounded-md px-3 py-2 text-sm w-full md:w-48
+             text-gray-700 dark:bg-gray-900 dark:text-white dark:border-gray-600"
           value={sortOrder}
           onChange={(e) => {
             setSortOrder(e.target.value);
@@ -127,7 +141,8 @@ const ManageCarsAdmin = () => {
         </select>
 
         <select
-          className="w-full md:w-1/4 py-2 px-3 border border-borderColor rounded-md"
+          className="border border-borderColor rounded-md px-3 py-2 text-sm w-full md:w-48
+             text-gray-700 dark:bg-gray-900 dark:text-white dark:border-gray-600"
           value={itemsPerPage}
           onChange={(e) => {
             setItemsPerPage(Number(e.target.value));
@@ -240,3 +255,5 @@ const ManageCarsAdmin = () => {
 };
 
 export default ManageCarsAdmin;
+
+

@@ -22,6 +22,7 @@ import ProfilePage from './pages/owner/ProfilePage';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserPage from './pages/admin/UserPage';
+import ManageCarsAdmin from "./pages/admin/ManageCarsAdmin";
 
 import { useAppContext } from './context/AppContext';
 
@@ -61,7 +62,8 @@ const App = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserPage />} />
           <Route path="add-car" element={<AddCar />} />
-          <Route path="manage-cars" element={<ManageCars />} />
+           
+<Route path="manage-cars" element={<ManageCarsAdmin />} />
           <Route path="manage-bookings" element={<ManageBookings />} />
         </Route>
       </Routes>
