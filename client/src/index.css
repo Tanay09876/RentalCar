@@ -3,6 +3,8 @@
 
 @import "tailwindcss";
 
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 * {
   font-family: "Outfit", sans-serif;
 }
@@ -38,6 +40,10 @@
   --color-primary: #3b82f6;
   --color-primary-dull: #2563EB;
   --color-borderColor: #475569;
+}
+
+[data-theme='dark'] .dark-invert {
+  filter: invert(1) brightness(1.5);
 }
 
 /* Apply Colors Globally */

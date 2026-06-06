@@ -167,16 +167,9 @@ import { motion } from 'motion/react';
 import { FaSun, FaMoon } from 'react-icons/fa';
 
 const Navbar = () => {
-  const { setShowLogin, user, isOwner, isAdmin, axios, setIsOwner, setIsAdmin } = useAppContext();
+  const { setShowLogin, user, isOwner, isAdmin, axios, setIsOwner, setIsAdmin, darkMode, toggleDarkMode, logout } = useAppContext();
   const [open, setOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const theme = darkMode ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [darkMode]);
 
   // Change Role to Owner
   const changeRole = async () => {
@@ -273,7 +266,7 @@ const Navbar = () => {
 
         {/* Theme Toggle */}
         <button
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={toggleDarkMode}
           aria-label="Toggle Theme"
           className="p-2 rounded-md border bg-transparent"
           style={{
@@ -284,7 +277,44 @@ const Navbar = () => {
           {darkMode ? <FaMoon size={18} /> : <FaSun size={18} />}
         </button>
 
-        {!user && (
+        {user ? (
+          <div className="relative flex items-center gap-2 cursor-pointer group">
+            <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold overflow-hidden border border-[var(--color-borderColor)]">
+              {user.image ? (
+                <img src={user.image} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                (user.name || "U").charAt(0).toUpperCase()
+              )}
+            </div>
+            <span className="font-medium text-sm hidden md:inline">{user.name}</span>
+            
+            {/* Dropdown Menu */}
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-[var(--color-borderColor)] dark:border-slate-800 rounded-lg shadow-lg py-2 hidden group-hover:block transition-all z-50">
+              <div className="px-4 py-2 border-b border-[var(--color-borderColor)] dark:border-slate-800 text-xs text-gray-400">
+                Logged in as <p className="font-semibold text-gray-700 dark:text-gray-200 truncate">{user.email}</p>
+              </div>
+              <Link to="/my-bookings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800">
+                My Bookings
+              </Link>
+              {isAdmin && (
+                <Link to="/admin" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800">
+                  Admin Dashboard
+                </Link>
+              )}
+              {isOwner && !isAdmin && (
+                <Link to="/owner" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800">
+                  Owner Dashboard
+                </Link>
+              )}
+              <button
+                onClick={logout}
+                className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        ) : (
           <button
             onClick={() => setShowLogin(true)}
             className="cursor-pointer px-6 py-2 rounded-lg transition-all"
@@ -301,7 +331,7 @@ const Navbar = () => {
       {/* Mobile Icons */}
       <div className="sm:hidden flex items-center gap-3 z-[60]">
         <button
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={toggleDarkMode}
           aria-label="Toggle Theme"
           className="p-2 rounded-md border"
           style={{
@@ -361,7 +391,39 @@ const Navbar = () => {
             {isAdmin ? 'Dashboard' : isOwner ? 'Dashboard' : 'List cars'}
           </div>
 
-          {!user && (
+          {user ? (
+            <div className="flex flex-col gap-4 border-t border-[var(--color-borderColor)] dark:border-slate-800 pt-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold overflow-hidden border border-[var(--color-borderColor)]">
+                  {user.image ? (
+                    <img src={user.image} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    (user.name || "U").charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{user.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                </div>
+              </div>
+              <Link
+                to="/my-bookings"
+                onClick={() => setOpen(false)}
+                className="font-medium hover:text-[var(--color-primary)] transition"
+              >
+                My Bookings
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                }}
+                className="text-left font-medium text-red-600 hover:text-red-500 transition cursor-pointer"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
             <button
               onClick={() => {
                 setShowLogin(true);

@@ -43,8 +43,8 @@ const ManageBookingsadmin = () => {
   // Filter by search and status
   const filteredBookings = bookings.filter((booking) => {
     const matchesSearch =
-      booking.car.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.car.model.toLowerCase().includes(searchTerm.toLowerCase())
+      booking.car?.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.car?.model?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -134,8 +134,8 @@ const ManageBookingsadmin = () => {
               currentBookings.map((booking, index) => (
                 <tr key={index} className='border-t border-borderColor text-gray-500'>
                   <td className='p-3 flex items-center gap-3'>
-                    <img src={booking.car.image} alt="" className='h-12 w-12 rounded-md object-cover' />
-                    <p className='font-medium'>{booking.car.brand} {booking.car.model}</p>
+                    <img src={booking.car?.image || "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=300"} alt="" className='h-12 w-12 rounded-md object-cover' />
+                    <p className='font-medium'>{booking.car ? `${booking.car.brand} ${booking.car.model}` : "Car Removed"}</p>
                   </td>
                   <td className='p-3'>
                     {booking.pickupDate.split('T')[0]} to {booking.returnDate.split('T')[0]}
@@ -179,9 +179,9 @@ const ManageBookingsadmin = () => {
           currentBookings.map((booking, index) => (
             <div key={index} className="border border-borderColor rounded-lg p-4 space-y-2">
               <div className="flex items-center gap-3">
-                <img src={booking.car.image} alt="" className='h-14 w-14 rounded-md object-cover' />
+                <img src={booking.car?.image || "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=300"} alt="" className='h-14 w-14 rounded-md object-cover' />
                 <div>
-                  <p className="font-medium">{booking.car.brand} {booking.car.model}</p>
+                  <p className="font-medium">{booking.car ? `${booking.car.brand} ${booking.car.model}` : "Car Removed"}</p>
                   <p className="text-xs text-gray-500">{booking.pickupDate.split('T')[0]} - {booking.returnDate.split('T')[0]}</p>
                 </div>
               </div>

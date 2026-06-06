@@ -2,12 +2,16 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 export const protect = async (req, res, next)=>{
-    const token = req.headers.authorization;
+    let token = req.headers.authorization;
     if(!token){
         return res.json({success: false, message: "not authorized"})
     } 
     try {
-        const userId = jwt.decode(token, process.env.JWT_SECRET)
+        if (token.startsWith("Bearer ")) {
+            token = token.split(" ")[1];
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const userId = decoded.id || decoded; // handles both object/string payloads safely
 
         if(!userId  ){
             return res.json({success: false, message: "not authorized"})

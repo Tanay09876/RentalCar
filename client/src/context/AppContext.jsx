@@ -34,6 +34,13 @@ export const AppProvider = ({ children }) => {
     });
   };
 
+  useEffect(() => {
+    const theme = darkMode ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("theme", theme);
+  }, [darkMode]);
+
   const fetchUser = async () => {
     try {
       const { data } = await axios.get('/api/user/data');

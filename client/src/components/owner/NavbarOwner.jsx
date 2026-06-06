@@ -8,21 +8,11 @@ import { FaSun, FaMoon, FaUserCircle } from "react-icons/fa";
 import { Avatar, Drawer, IconButton } from "@mui/material";
 
 const NavbarOwner = () => {
-  const { user, logout, axios, fetchUser } = useAppContext();
+  const { user, logout, axios, fetchUser, darkMode, toggleDarkMode } = useAppContext();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [image, setImage] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
-
-  useEffect(() => {
-    const theme = darkMode ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [darkMode]);
 
   const updateImage = async () => {
     try {
@@ -164,7 +154,7 @@ const NavbarOwner = () => {
 
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleDarkMode}
             className="p-2 rounded-md border bg-transparent"
             style={{
               color: "var(--color-primary)",

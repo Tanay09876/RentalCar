@@ -2,6 +2,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import fs from "fs";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import {
   loginUser,
@@ -10,7 +11,7 @@ import {
 } from "../controllers/userController.js";
 import { protect } from "../middleware/auth.js";
 import upload from "../middleware/multer.js";
-import imagekit from "../utils/imagekit.js";
+import imagekit from "../configs/imageKit.js";
 import { sendOTPEmail, sendWelcomeEmail } from "../utils/mailer.js";
 
 const router = express.Router();
@@ -38,8 +39,10 @@ router.post("/register", async (req, res) => {
       role,
     });
 
+    const token = jwt.sign(user._id.toString(), process.env.JWT_SECRET);
+
     await sendWelcomeEmail(email, name);
-    res.status(201).json({ success: true, message: "User registered successfully" });
+    res.status(201).json({ success: true, token, role: user.role, message: "User registered successfully" });
   } catch (err) {
     console.error("Register Error:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -110,7 +113,7 @@ router.post("/verify-otp", async (req, res) => {
 // ✅ Get Profile Info
 router.get("/profile", protect, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("-password -otp -otpExpiry");
+    const user = await User.findById(req.user._id).select("-password -otp -otpExpiry");
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json({ success: true, user });
@@ -125,7 +128,7 @@ router.put("/update-profile", protect, upload.single("image"), async (req, res) 
   try {
     const { name, email, password, confirmPassword } = req.body;
 
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // Update name

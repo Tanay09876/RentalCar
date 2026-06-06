@@ -203,13 +203,13 @@ const ManageCars = () => {
                       onClick={() => toggleAvailability(car._id)}
                       src={car.isAvaliable ? assets.eye_close_icon : assets.eye_icon}
                       alt="Toggle Availability"
-                      className="cursor-pointer"
+                      className="cursor-pointer dark:invert dark-invert"
                     />
                     <img
                       onClick={() => deleteCar(car._id)}
                       src={assets.delete_icon}
                       alt="Delete Car"
-                      className="cursor-pointer"
+                      className="cursor-pointer dark:invert dark-invert"
                     />
                   </td>
                 </tr>

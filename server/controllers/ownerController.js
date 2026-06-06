@@ -311,7 +311,7 @@ export const toggleCarAvailability = async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    car.isAvailable = !car.isAvailable;
+    car.isAvaliable = !car.isAvaliable;
     await car.save();
 
     res.json({ success: true, message: "Availability toggled" });

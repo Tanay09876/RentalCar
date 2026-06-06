@@ -176,7 +176,7 @@
 //     }
 // }
 
-import nodemailer from "nodemailer";
+import { sendEmail } from "../utils/mailer.js";
 import User from "../models/User.js";
 
 // Get all users
@@ -188,15 +188,6 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.SMTP_USER, 
-    pass: process.env.SMTP_PASS, 
-  },
-});
-
-
 // Function to send mail
 export const sendMailToUser = async (req, res) => {
   const { email, subject, message } = req.body;
@@ -206,13 +197,7 @@ export const sendMailToUser = async (req, res) => {
   }
 
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: subject,
-      text: message,
-    });
-
+    await sendEmail(email, subject, message);
     res.json({ success: true, message: "Mail sent successfully" });
   } catch (error) {
     console.error(error);
