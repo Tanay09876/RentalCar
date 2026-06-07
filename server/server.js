@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
+import fs from "fs";
 
 import connectDB from "./configs/db.js";
 import userRouter from "./routes/userRoutes.js";
@@ -16,9 +17,15 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
+    // Create uploads directory if not present
+    if (!fs.existsSync("uploads")) {
+      fs.mkdirSync("uploads");
+    }
+
     // Middlewares
     app.use(cors());
     app.use(express.json());
+    app.use("/uploads", express.static("uploads"));
 
     // API Routes
     app.get("/", (req, res) => res.send("🚗 Car Rental API is running"));

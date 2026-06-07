@@ -6,6 +6,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
 import toast from 'react-hot-toast'
 import { motion } from 'motion/react'
+import InteractiveMap from '../components/InteractiveMap'
+import { FaMapMarkedAlt, FaList } from 'react-icons/fa'
 
 const Cars = () => {
   const [searchParams] = useSearchParams()
@@ -17,6 +19,7 @@ const Cars = () => {
   const { cars, axios } = useAppContext()
   const [input, setInput] = useState(searchQuery)
   const [filteredCars, setFilteredCars] = useState([])
+  const [showMap, setShowMap] = useState(false)
 
   const isSearchData = pickupLocation && pickupDate && returnDate
 
@@ -93,29 +96,79 @@ const Cars = () => {
         </motion.div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
-        className='px-6 md:px-16 lg:px-24 xl:px-32 mt-10'
-      >
-        <p className='text-gray-500 xl:px-20 max-w-7xl mx-auto'>
-          Showing {filteredCars.length} Cars
-        </p>
-
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4 xl:px-20 max-w-7xl mx-auto'>
-          {filteredCars.map((car, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index, duration: 0.4 }}
-            >
-              <CarCard car={car} />
-            </motion.div>
-          ))}
+      <div className="px-6 md:px-16 lg:px-24 xl:px-32">
+        <div className="flex items-center justify-between border-b border-borderColor pb-4 xl:px-20 max-w-7xl mx-auto">
+          <p className="text-gray-500 font-medium">
+            Showing {filteredCars.length} Cars
+          </p>
+          <button
+            onClick={() => setShowMap(!showMap)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full text-xs font-semibold shadow hover:bg-primary/95 transition-all cursor-pointer hover:shadow-md"
+          >
+            {showMap ? (
+              <>
+                <FaList size={14} />
+                <span>Show Grid List</span>
+              </>
+            ) : (
+              <>
+                <FaMapMarkedAlt size={14} />
+                <span>Show Map View</span>
+              </>
+            )}
+          </button>
         </div>
-      </motion.div>
+      </div>
+
+      {showMap ? (
+        <div className="flex flex-col lg:flex-row gap-6 px-6 md:px-16 lg:px-24 xl:px-32 mt-6 max-w-8xl mx-auto mb-16">
+          {/* List side */}
+          <div className="w-full lg:w-1/2 h-[75vh] overflow-y-auto lg:pr-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6">
+              {filteredCars.map((car, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * index, duration: 0.4 }}
+                >
+                  <CarCard car={car} />
+                </motion.div>
+              ))}
+            </div>
+            {filteredCars.length === 0 && (
+              <p className="text-gray-500 mt-10 text-center">No available cars matching your criteria.</p>
+            )}
+          </div>
+          {/* Map side */}
+          <div className="w-full lg:w-1/2 h-[55vh] lg:h-[75vh] sticky top-24 z-20">
+            <InteractiveMap cars={filteredCars} />
+          </div>
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="px-6 md:px-16 lg:px-24 xl:px-32 mt-6 mb-16"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4 xl:px-20 max-w-7xl mx-auto">
+            {filteredCars.map((car, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index, duration: 0.4 }}
+              >
+                <CarCard car={car} />
+              </motion.div>
+            ))}
+          </div>
+          {filteredCars.length === 0 && (
+            <p className="text-gray-500 mt-10 text-center">No available cars matching your search.</p>
+          )}
+        </motion.div>
+      )}
     </div>
   )
 }

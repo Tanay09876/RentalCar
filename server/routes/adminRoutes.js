@@ -4,6 +4,7 @@ import { protect } from "../middleware/auth.js"; // JWT auth
 import { adminOnly } from "../middleware/admin.js"; // Admin role check
 import Booking from "../models/Booking.js";
 import Car from "../models/Car.js";
+import User from "../models/User.js";
 import upload from "../middleware/multer.js";
 import { updateUserImage } from "../controllers/ownerController.js";
 
@@ -35,19 +36,38 @@ router.get("/dashboard", protect, adminOnly, async (req, res) => {
     const pendingBookings = await Booking.countDocuments({ status: "pending" });
     const completedBookings = await Booking.countDocuments({ status: "confirmed" });
 
-    const recentBookings = await Booking.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate("car", "brand model")
-      .populate("user", "name email")
-      .lean();
+    const cancelledBookings = await Booking.countDocuments({ status: "cancelled" });
 
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const monthlyRevenueAgg = await Booking.aggregate([
-      { $match: { status: "confirmed", createdAt: { $gte: startOfMonth } } },
-      { $group: { _id: null, total: { $sum: "$price" } } },
+    const statusChartData = [
+      { name: "Pending", value: pendingBookings },
+      { name: "Confirmed", value: completedBookings },
+      { name: "Cancelled", value: cancelledBookings }
+    ];
+
+    // Count unique users who have booked a car
+    const totalBookedUsers = (await Booking.distinct("user")).length;
+
+    // Count total owners (registered car for rent)
+    const totalOwners = await User.countDocuments({ role: "owner" });
+
+    // Count standard users (customers)
+    const totalCustomers = await User.countDocuments({ role: "user" });
+
+    // User statistics for chart
+    const userStatsChartData = [
+      { name: "Booked Users", value: totalBookedUsers },
+      { name: "Car Partners (Owners)", value: totalOwners },
+      { name: "Total Customers", value: totalCustomers }
+    ];
+
+    // Car category distribution aggregation
+    const carCategoriesAgg = await Car.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
-    const monthlyRevenue = monthlyRevenueAgg[0]?.total || 0;
+    const carCategoryChartData = carCategoriesAgg.map(item => ({
+      name: item._id || "Other",
+      value: item.count
+    }));
 
     res.json({
       success: true,
@@ -56,8 +76,10 @@ router.get("/dashboard", protect, adminOnly, async (req, res) => {
         totalBookings,
         pendingBookings,
         completedBookings,
-        recentBookings,
-        monthlyRevenue,
+        cancelledBookings,
+        statusChartData,
+        userStatsChartData,
+        carCategoryChartData
       },
     });
   } catch (err) {

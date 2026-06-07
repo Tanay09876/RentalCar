@@ -3,6 +3,7 @@ import { assets, cityList } from '../assets/assets'
 import { useAppContext } from '../context/AppContext'
 import { motion } from 'motion/react'
 import heroVideo from '../assets/videos/hero-bg.mp4' 
+import toast from 'react-hot-toast'
 
 const Hero = () => {
   const [pickupLocation, setPickupLocation] = useState('')
@@ -10,6 +11,10 @@ const Hero = () => {
 
   const handleSearch = (e) => {
     e.preventDefault()
+    if (new Date(returnDate) < new Date(pickupDate)) {
+      toast.error("Return date must be at or after pickup date")
+      return
+    }
     navigate(`/cars?pickupLocation=${pickupLocation}&pickupDate=${pickupDate}&returnDate=${returnDate}`)
   }
 
@@ -98,6 +103,7 @@ const Hero = () => {
         onChange={(e) => setReturnDate(e.target.value)}
         type="date"
         id="return-date"
+        min={pickupDate || new Date().toISOString().split("T")[0]}
         className="w-full px-4 py-2  text-sm text-gray-700"
         required
       />

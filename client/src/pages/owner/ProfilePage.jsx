@@ -2,10 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 import { motion } from "motion/react";
-import { FaUser, FaEnvelope, FaLock, FaKey, FaShieldAlt } from "react-icons/fa";
+import Title from "../../components/owner/Title";
+import {
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaKey,
+  FaShieldAlt,
+  FaCalendarAlt,
+  FaCamera,
+  FaTimes,
+  FaEdit
+} from "react-icons/fa";
 
 const ProfilePage = () => {
-  const { user, fetchUser, axios } = useAppContext();
+  const { user, fetchUser, axios, logout, navigate } = useAppContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,16 +28,31 @@ const ProfilePage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true);
 
-  // Load user details into form
+  // Profile Image Upload States
+  const [imagePreview, setImagePreview] = useState("");
+
+  // Check auth and load user details into form
   useEffect(() => {
-    setFormData({
-      name: user?.name || "",
-      email: user?.email || "",
-      password: "",
-      confirmPassword: "",
-    });
-  }, [user]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to access your profile.");
+      navigate("/");
+      return;
+    }
+
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        password: "",
+        confirmPassword: "",
+      });
+      setImagePreview(user.image || "");
+      setLoadingUser(false);
+    }
+  }, [user, navigate]);
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -34,8 +60,55 @@ const ProfilePage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Update profile
-  const handleSaveProfile = async () => {
+  // Upload Photo instantly
+  const handleUploadPhoto = async (file) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error("Image file size should be less than 2MB");
+    }
+
+    const loadingToast = toast.loading("Uploading profile picture...");
+    try {
+      setLoading(true);
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+      uploadData.append("name", user.name);
+      uploadData.append("email", user.email);
+
+      const { data } = await axios.put(
+        "/api/user/update-profile",
+        uploadData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success("Profile picture updated successfully!", { id: loadingToast });
+        await fetchUser();
+      } else {
+        toast.error(data.message || "Failed to update profile picture", { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Upload failed", { id: loadingToast });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle photo selection
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await handleUploadPhoto(file);
+    }
+  };
+
+  // Update profile details
+  const handleSaveProfile = async (e) => {
+    e?.preventDefault();
     if (!formData.name.trim() || !formData.email.trim()) {
       return toast.error("Name and email are required.");
     }
@@ -46,11 +119,22 @@ const ProfilePage = () => {
 
     try {
       setLoading(true);
-      const { name, email, password, confirmPassword } = formData;
+      const uploadData = new FormData();
+      uploadData.append("name", formData.name.trim());
+      uploadData.append("email", formData.email.trim());
+      if (formData.password) {
+        uploadData.append("password", formData.password);
+        uploadData.append("confirmPassword", formData.confirmPassword);
+      }
 
       const { data } = await axios.put(
         "/api/user/update-profile",
-        { name, email, password, confirmPassword }
+        uploadData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
       if (data.success) {
@@ -81,224 +165,249 @@ const ProfilePage = () => {
       password: "",
       confirmPassword: "",
     });
+    setImagePreview(user?.image || "");
   };
 
-  // Get display role
+  // Format Join Date
+  const joinDate = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : "N/A";
+
+  // Get display role label
   const getRoleBadge = () => {
-    const role = user?.role || "customer";
+    const role = user?.role || "user";
     if (role === "admin") {
       return (
-        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50">
+        <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50">
           Admin
         </span>
       );
     } else if (role === "owner") {
       return (
-        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50">
-          Owner
+        <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50">
+          Car Partner
         </span>
       );
     }
     return (
-      <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-600 dark:bg-green-950/40 dark:text-green-400 border border-green-200 dark:border-green-900/50">
+      <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/50">
         Customer
       </span>
     );
   };
 
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
+  if (loadingUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 md:py-20">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden"
-      >
-        {/* Banner Section */}
-        <div className="h-40 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 relative">
-          <div className="absolute right-6 top-6 bg-white/20 backdrop-blur-md rounded-full px-4 py-1.5 text-xs text-white font-medium border border-white/25">
-            Manage Account
-          </div>
-        </div>
+    <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-12 md:mt-16 min-h-[70vh] flex flex-col items-center w-full">
+      <div className="max-w-2xl w-full text-black dark:text-white pb-16">
+        <Title
+          title="My Profile"
+          subTitle="Manage your personal details, update profile picture, and maintain account security"
+        />
 
-        {/* Profile Info Overlay Header */}
-        <div className="px-6 md:px-10 pb-8 pt-4 relative border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/50 dark:bg-slate-900/50">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-20 sm:-mt-16">
-            {/* Initial Avatar */}
-            <div className="h-28 w-28 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-4xl font-extrabold shadow-lg border-4 border-white dark:border-slate-900">
-              {userInitial}
+        <motion.form
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          onSubmit={handleSaveProfile}
+          className="border border-borderColor rounded-xl bg-white dark:bg-slate-900 p-6 md:p-8 shadow-sm space-y-6 mt-8 w-full"
+        >
+          {/* Profile Avatar Upload / Details Section */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 pb-4 border-b border-borderColor/50">
+            <div className="relative group cursor-pointer flex-shrink-0">
+              <label htmlFor="profile-photo" className="cursor-pointer block relative">
+                <div className="h-20 w-20 rounded-xl overflow-hidden border-2 border-primary shadow-sm bg-light dark:bg-slate-800 flex items-center justify-center">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-extrabold text-primary">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "?"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/40 rounded-xl flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <FaCamera className="text-lg" />
+                  <span className="text-[8px] font-semibold uppercase tracking-wider mt-0.5">
+                    Change
+                  </span>
+                </div>
+              </label>
+              <input
+                type="file"
+                id="profile-photo"
+                accept="image/*"
+                hidden
+                onChange={handlePhotoChange}
+              />
             </div>
-            <div className="text-center sm:text-left flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+
+            <div className="text-center sm:text-left space-y-1.5 flex-1">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {user?.name || "Anonymous User"}
               </h2>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-1.5">
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {user?.email}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span>{user?.email}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <FaCalendarAlt size={10} /> Joined {joinDate}
                 </span>
+              </div>
+              <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 {getRoleBadge()}
+                {user?.role === "owner" && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    {user?.carsOwned?.length || 0} Cars Registered
+                  </span>
+                )}
+              </div>
+              {/* Dedicated Update Picture Trigger */}
+              <div className="pt-2">
+                <label
+                  htmlFor="profile-photo"
+                  className="cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-lg border border-borderColor bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5"
+                >
+                  <FaCamera size={11} className="text-primary" /> Update Picture
+                </label>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content Area */}
-        <div className="p-6 md:p-10">
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-              <FaShieldAlt className="text-blue-500" />
-              Account Credentials & Info
-            </h3>
-
+          {/* Text Fields Form */}
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name field */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              {/* Full Name */}
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
                   Full Name
                 </label>
-                {isEditing ? (
-                  <div className="relative">
-                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Your full name"
-                      className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700/80 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800 dark:text-gray-100 transition duration-200"
-                    />
-                  </div>
-                ) : (
-                  <div className="p-3 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-gray-100 dark:border-slate-800 text-gray-800 dark:text-gray-200 font-medium">
-                    {user?.name || "Not set"}
-                  </div>
-                )}
+                <input
+                  type="text"
+                  name="name"
+                  disabled={!isEditing}
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Full Name"
+                  className="px-3 py-2 border border-borderColor rounded-md outline-none text-black dark:text-white bg-light/30 dark:bg-slate-800/20 disabled:opacity-75 disabled:cursor-not-allowed"
+                />
               </div>
 
-              {/* Email field */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              {/* Email Address */}
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
                   Email Address
                 </label>
-                {isEditing ? (
-                  <div className="relative">
-                    <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Your email address"
-                      className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700/80 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800 dark:text-gray-100 transition duration-200"
-                    />
-                  </div>
-                ) : (
-                  <div className="p-3 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-gray-100 dark:border-slate-800 text-gray-800 dark:text-gray-200 font-medium">
-                    {user?.email || "Not set"}
-                  </div>
-                )}
+                <input
+                  type="email"
+                  name="email"
+                  disabled={!isEditing}
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Email Address"
+                  className="px-3 py-2 border border-borderColor rounded-md outline-none text-black dark:text-white bg-light/30 dark:bg-slate-800/20 disabled:opacity-75 disabled:cursor-not-allowed"
+                />
               </div>
             </div>
 
-            {/* Password Section */}
-            {isEditing ? (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="pt-4 border-t border-gray-100 dark:border-slate-800/60 space-y-4"
-              >
-                <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+            {/* Password Section (Only shown when editing) */}
+            {isEditing && (
+              <div className="border-t border-borderColor/40 pt-5 mt-4 space-y-4">
+                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Change Password (Optional)
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* New Password */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <div className="flex flex-col relative">
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
                       New Password
                     </label>
-                    <div className="relative">
-                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        placeholder="Leave blank to keep current"
-                        className="w-full pl-11 pr-16 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700/80 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800 dark:text-gray-100 transition duration-200 text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-blue-500 hover:text-blue-600 transition"
-                      >
-                        {showPassword ? "Hide" : "Show"}
-                      </button>
-                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      autoComplete="new-password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Leave blank to keep current"
+                      className="px-3 py-2 border border-borderColor rounded-md outline-none text-black dark:text-white bg-light/30 dark:bg-slate-800/20 pr-16"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 bottom-2.5 text-xs font-semibold text-primary hover:text-primary-dull transition cursor-pointer"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
                   </div>
 
-                  {/* Confirm Password */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                      Confirm New Password
+                  <div className="flex flex-col">
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                      Confirm Password
                     </label>
-                    <div className="relative">
-                      <FaKey className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        placeholder="Re-type new password"
-                        className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700/80 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800 dark:text-gray-100 transition duration-200 text-sm"
-                      />
-                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      autoComplete="new-password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder="Re-type new password"
+                      className="px-3 py-2 border border-borderColor rounded-md outline-none text-black dark:text-white bg-light/30 dark:bg-slate-800/20"
+                    />
                   </div>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="pt-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
-                  Password
-                </label>
-                <div className="p-3 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-gray-100 dark:border-slate-800 text-gray-400 dark:text-gray-500 font-medium">
-                  ••••••••
                 </div>
               </div>
             )}
-
-            {/* Form Actions */}
-            <div className="pt-6 flex flex-col sm:flex-row gap-4 border-t border-gray-100 dark:border-slate-800/60">
-              {isEditing ? (
-                <>
-                  <button
-                    disabled={loading}
-                    onClick={handleSaveProfile}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-                  >
-                    {loading ? "Saving..." : "Save Changes"}
-                  </button>
-                  <button
-                    disabled={loading}
-                    onClick={handleCancel}
-                    className="flex-1 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-semibold py-3 rounded-xl transition-all duration-200"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="w-full sm:w-auto px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  Edit Profile
-                </button>
-              )}
-            </div>
           </div>
-        </div>
-      </motion.div>
+
+          {/* Buttons Section */}
+          <div className="pt-4 flex gap-4">
+            {isEditing ? (
+              <>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="cursor-pointer px-6 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-lg font-semibold text-sm disabled:opacity-50 flex-1 flex items-center justify-center"
+                >
+                  {loading ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={loading}
+                  className="cursor-pointer px-6 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 transition-all rounded-lg font-semibold text-sm flex-1"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-4 w-full">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="cursor-pointer px-6 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-lg font-semibold text-sm flex-1 flex items-center justify-center gap-1.5"
+                >
+                  <FaEdit size={12} /> Edit Profile Info
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.form>
+      </div>
     </div>
   );
 };

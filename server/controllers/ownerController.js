@@ -251,23 +251,27 @@ export const addCar = async (req, res) => {
   try {
     const { _id } = req.user;
     const car = JSON.parse(req.body.carData);
-    const imageFile = req.file;
+
+    const imageFile = req.files && req.files["image"] ? req.files["image"][0] : null;
+    const rcFile = req.files && req.files["rcDocument"] ? req.files["rcDocument"][0] : null;
 
     if (!imageFile) {
       return res.status(400).json({ success: false, message: "Car image is required" });
     }
+    if (!rcFile) {
+      return res.status(400).json({ success: false, message: "Registration Certificate (RC) document file is required" });
+    }
 
     // Upload Image to ImageKit
-    const fileBuffer = fs.readFileSync(imageFile.path);
-    const response = await imagekit.upload({
-      file: fileBuffer,
+    const imgBuffer = fs.readFileSync(imageFile.path);
+    const imgResponse = await imagekit.upload({
+      file: imgBuffer,
       fileName: imageFile.originalname,
       folder: "/cars",
     });
 
-    // Optimization through ImageKit URL transformation
     const optimizedImageUrl = imagekit.url({
-      path: response.filePath,
+      path: imgResponse.filePath,
       transformation: [
         { width: "1280" },
         { quality: "auto" },
@@ -275,7 +279,25 @@ export const addCar = async (req, res) => {
       ],
     });
 
-    await Car.create({ ...car, owner: _id, image: optimizedImageUrl });
+    // Upload RC Document to ImageKit
+    const rcBuffer = fs.readFileSync(rcFile.path);
+    const rcResponse = await imagekit.upload({
+      file: rcBuffer,
+      fileName: rcFile.originalname,
+      folder: "/car_documents",
+    });
+
+    const optimizedRcUrl = imagekit.url({
+      path: rcResponse.filePath,
+      transformation: [{ quality: "auto" }],
+    });
+
+    await Car.create({
+      ...car,
+      owner: _id,
+      image: optimizedImageUrl,
+      rcDocument: optimizedRcUrl
+    });
 
     res.json({ success: true, message: "Car added successfully" });
   } catch (error) {
@@ -365,6 +387,31 @@ export const getDashboardData = async (req, res) => {
 
     const monthlyRevenue = confirmedBookings.reduce((acc, b) => acc + b.price, 0);
 
+    // Group bookings of current year by month for charts
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentYear = new Date().getFullYear();
+    const monthlyRevenueStats = {};
+    months.forEach(m => { monthlyRevenueStats[m] = 0; });
+
+    confirmedBookings.forEach((b) => {
+      const d = new Date(b.createdAt);
+      if (d.getFullYear() === currentYear) {
+        const m = months[d.getMonth()];
+        monthlyRevenueStats[m] += b.price;
+      }
+    });
+
+    const revenueChartData = months.map(m => ({
+      name: m,
+      Revenue: monthlyRevenueStats[m]
+    }));
+
+    const statusChartData = [
+      { name: "Pending", value: pendingBookings.length },
+      { name: "Confirmed", value: confirmedBookings.length },
+      { name: "Cancelled", value: cancelledBookings.length }
+    ];
+
     res.json({
       success: true,
       dashboardData: {
@@ -375,6 +422,8 @@ export const getDashboardData = async (req, res) => {
         cancelledBookings: cancelledBookings.length,
         recentBookings: bookings.slice(0, 3),
         monthlyRevenue,
+        revenueChartData,
+        statusChartData
       },
     });
   } catch (error) {

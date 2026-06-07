@@ -83,7 +83,6 @@ const Login = () => {
         }
       }
     } catch (error) {
-      console.error("Auth error:", error?.response?.data || error.message);
       toast.error(error?.response?.data?.message || error.message || "Something went wrong");
     }
   };

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Car from "../models/Car.js";
 
 export const protect = async (req, res, next)=>{
     let token = req.headers.authorization;
@@ -16,7 +17,18 @@ export const protect = async (req, res, next)=>{
         if(!userId  ){
             return res.json({success: false, message: "not authorized"})
         }
-        req.user = await User.findById(userId).select("-password")
+        const userDoc = await User.findById(userId).select("-password");
+        if (!userDoc) {
+            return res.json({success: false, message: "not authorized"})
+        }
+
+        const user = userDoc.toObject();
+        if (user.role === "owner") {
+            const cars = await Car.find({ owner: userId }).select("_id");
+            user.carsOwned = cars.map(c => c._id);
+        }
+
+        req.user = user;
         next();
     } catch (error) {
         return res.json({success: false, message: "not authorized"})

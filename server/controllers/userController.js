@@ -139,7 +139,7 @@
 /* This JavaScript code snippet is a module that handles user authentication and profile management
 functionalities for a web application. Here is a breakdown of what each part of the code does: */
 import User from "../models/User.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import Car from "../models/Car.js";
@@ -192,6 +192,7 @@ export const loginUser = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.json({ success: false, message: "Invalid Credentials" });
     }
@@ -200,7 +201,7 @@ export const loginUser = async (req, res) => {
 
     res.json({ success: true, token, role: user.role });
   } catch (error) {
-    console.log(error.message);
+    console.error("❌ Login error:", error.message);
     res.json({ success: false, message: error.message });
   }
 };

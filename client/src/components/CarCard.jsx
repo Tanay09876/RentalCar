@@ -1,6 +1,7 @@
 import React from 'react'
 import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
+import { FaStar } from 'react-icons/fa'
 
 const CarCard = ({ car }) => {
   const currency = import.meta.env.VITE_CURRENCY
@@ -38,9 +39,16 @@ const CarCard = ({ car }) => {
 
       <div className="p-4 sm:p-5">
         <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="text-lg font-medium  ">{car.brand} {car.model}</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">{car.category} • {car.year}</p>
+          <div className="w-full">
+            <h3 className="text-lg font-medium flex items-center justify-between gap-2">
+              <span>{car.brand} {car.model}</span>
+              {car.rating > 0 && (
+                <span className="flex items-center text-xs font-semibold text-yellow-500 gap-0.5 bg-yellow-400/10 px-2 py-0.5 rounded-full shrink-0">
+                  <FaStar size={10} /> {car.rating.toFixed(1)}
+                </span>
+              )}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{car.category} • {car.year}</p>
           </div>
         </div>
 

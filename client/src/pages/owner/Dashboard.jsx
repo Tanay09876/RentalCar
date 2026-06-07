@@ -3,6 +3,12 @@ import { assets } from "../../assets/assets";
 import Title from "../../components/owner/Title";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from "recharts";
+
+const COLORS = ["#eab308", "#22c55e", "#ef4444"];
 
 const Dashboard = () => {
   const { axios, isOwner, currency } = useAppContext();
@@ -15,6 +21,8 @@ const Dashboard = () => {
     cancelledBookings: 0,
     recentBookings: [],
     monthlyRevenue: 0,
+    revenueChartData: [],
+    statusChartData: []
   });
 
   const dashboardCards = [
@@ -68,6 +76,72 @@ const Dashboard = () => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* 📊 Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Revenue Area Chart */}
+        <div className="lg:col-span-2 p-6 border border-borderColor rounded-xl bg-white dark:bg-slate-900 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Revenue Performance</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Total earnings from bookings throughout the year</p>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.revenueChartData || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-borderColor)" opacity={0.2} />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} width={55} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-borderColor)', color: 'var(--color-text)' }} itemStyle={{ color: 'var(--color-text)' }} labelStyle={{ color: 'var(--color-text)' }} />
+                <Area type="monotone" dataKey="Revenue" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Booking Status Pie Chart */}
+        <div className="p-6 border border-borderColor rounded-xl bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Booking Status</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Distribution of reservations</p>
+          </div>
+          <div className="h-48 relative flex items-center justify-center">
+            {data.statusChartData && data.statusChartData.some(item => item.value > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.statusChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {data.statusChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-borderColor)', color: 'var(--color-text)' }} itemStyle={{ color: 'var(--color-text)' }} labelStyle={{ color: 'var(--color-text)' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-gray-400">No booking statistics yet</p>
+            )}
+          </div>
+          <div className="flex justify-around mt-4">
+            {data.statusChartData && data.statusChartData.map((item, idx) => (
+              <div key={item.name} className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
+                <span>{item.name} ({item.value})</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

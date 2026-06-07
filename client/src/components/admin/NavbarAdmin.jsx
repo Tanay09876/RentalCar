@@ -32,10 +32,16 @@ const NavbarAdmin = () => {
     }
   };
 
-  // Insert Users into Menu Links (after Dashboard)
+  // Insert Profile and Users into Menu Links (after Dashboard)
   const updatedLinks = [...adminMenuLinks];
   const dashboardIndex = updatedLinks.findIndex((l) => l.name === "Dashboard");
   updatedLinks.splice(dashboardIndex + 1, 0, {
+    name: "Profile",
+    path: "/admin/profile",
+    icon: <FaUserCircle size={18} />,
+    coloredIcon: <FaUserCircle size={18} color="var(--color-primary)" />
+  });
+  updatedLinks.splice(dashboardIndex + 2, 0, {
     name: "Users",
     path: "/admin/users",
     icon: <FaUserCircle size={18} />,

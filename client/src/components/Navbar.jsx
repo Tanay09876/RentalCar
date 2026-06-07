@@ -178,6 +178,7 @@ const Navbar = () => {
       if (data.success) {
         setIsOwner(true);
         toast.success(data.message);
+        navigate('/owner/add-car');
       } else {
         toast.error(data.message);
       }
@@ -233,6 +234,13 @@ const Navbar = () => {
     }
   };
 
+  // Decide profile link path based on role
+  const getProfileLink = () => {
+    if (isAdmin) return "/admin/profile";
+    if (isOwner) return "/owner/profile";
+    return "/profile";
+  };
+
   return (
     <motion.div
       initial={{ y: -20, opacity: 0 }}
@@ -278,7 +286,7 @@ const Navbar = () => {
         </button>
 
         {user ? (
-          <div className="relative flex items-center gap-2 cursor-pointer group">
+          <Link to={getProfileLink()} className="flex items-center gap-2 hover:opacity-85 transition cursor-pointer">
             <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold overflow-hidden border border-[var(--color-borderColor)]">
               {user.image ? (
                 <img src={user.image} alt="avatar" className="w-full h-full object-cover" />
@@ -287,33 +295,7 @@ const Navbar = () => {
               )}
             </div>
             <span className="font-medium text-sm hidden md:inline">{user.name}</span>
-            
-            {/* Dropdown Menu */}
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-[var(--color-borderColor)] dark:border-slate-800 rounded-lg shadow-lg py-2 hidden group-hover:block transition-all z-50">
-              <div className="px-4 py-2 border-b border-[var(--color-borderColor)] dark:border-slate-800 text-xs text-gray-400">
-                Logged in as <p className="font-semibold text-gray-700 dark:text-gray-200 truncate">{user.email}</p>
-              </div>
-              <Link to="/my-bookings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800">
-                My Bookings
-              </Link>
-              {isAdmin && (
-                <Link to="/admin" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800">
-                  Admin Dashboard
-                </Link>
-              )}
-              {isOwner && !isAdmin && (
-                <Link to="/owner" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800">
-                  Owner Dashboard
-                </Link>
-              )}
-              <button
-                onClick={logout}
-                className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
+          </Link>
         ) : (
           <button
             onClick={() => setShowLogin(true)}
@@ -393,7 +375,11 @@ const Navbar = () => {
 
           {user ? (
             <div className="flex flex-col gap-4 border-t border-[var(--color-borderColor)] dark:border-slate-800 pt-4">
-              <div className="flex items-center gap-3">
+              <Link
+                to={getProfileLink()}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 cursor-pointer hover:opacity-85 transition"
+              >
                 <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold overflow-hidden border border-[var(--color-borderColor)]">
                   {user.image ? (
                     <img src={user.image} alt="avatar" className="w-full h-full object-cover" />
@@ -405,7 +391,7 @@ const Navbar = () => {
                   <p className="font-semibold text-sm">{user.name}</p>
                   <p className="text-xs text-gray-400 truncate">{user.email}</p>
                 </div>
-              </div>
+              </Link>
               <Link
                 to="/my-bookings"
                 onClick={() => setOpen(false)}

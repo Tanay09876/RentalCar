@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import fs from "fs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Car from "../models/Car.js";
 import {
   loginUser,
   getUserData,
@@ -44,7 +45,7 @@ router.post("/register", async (req, res) => {
     await sendWelcomeEmail(email, name);
     res.status(201).json({ success: true, token, role: user.role, message: "User registered successfully" });
   } catch (err) {
-    console.error("Register Error:", err);
+    console.error("❌ Register Error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -156,12 +157,19 @@ router.put("/update-profile", protect, upload.single("image"), async (req, res) 
 
     // Update image if uploaded
     if (req.file) {
-      const uploadedImage = await imagekit.upload({
-        file: req.file.buffer,
-        fileName: req.file.originalname,
-      });
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const uploadedImage = await imagekit.upload({
+          file: fileBuffer,
+          fileName: req.file.originalname,
+        });
 
-      user.image = uploadedImage.url;
+        user.image = uploadedImage.url;
+      } finally {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      }
     }
 
     await user.save();
@@ -178,6 +186,49 @@ router.put("/update-profile", protect, upload.single("image"), async (req, res) 
   } catch (error) {
     console.error("Update Profile Error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ✅ Add Review to a Car
+router.post("/cars/:id/reviews", protect, async (req, res) => {
+  const { rating, comment } = req.body;
+  const carId = req.params.id;
+
+  try {
+    if (!rating || !comment) {
+      return res.status(400).json({ success: false, message: "Please provide rating and comment" });
+    }
+
+    const car = await Car.findById(carId);
+    if (!car) {
+      return res.status(404).json({ success: false, message: "Car not found" });
+    }
+
+    // Check if user already reviewed this car
+    const alreadyReviewed = car.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+    if (alreadyReviewed) {
+      return res.status(400).json({ success: false, message: "You have already reviewed this car" });
+    }
+
+    const review = {
+      user: req.user._id,
+      userName: req.user.name,
+      rating: Number(rating),
+      comment,
+    };
+
+    car.reviews.push(review);
+    car.rating =
+      car.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      car.reviews.length;
+
+    await car.save();
+    res.status(201).json({ success: true, message: "Review added successfully", rating: car.rating, reviews: car.reviews });
+  } catch (error) {
+    console.error("Add Review Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
